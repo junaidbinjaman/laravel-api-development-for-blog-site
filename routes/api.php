@@ -14,3 +14,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::resource('/category', CategoryController::class);
 });
+
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/category/{category}', [CategoryController::class, 'show']);
