@@ -23,8 +23,8 @@ class PostFactory extends Factory
         return [
             'title' => $title,
             'slug' => Str::slug($title),
-            'author_id' => User::factory(),
-            'category_id' => Category::factory(),
+            'author_id' => null,
+            'category_id' => null,
             'content' => fake()->paragraphs(rand(3, 7), true),
             'excerpt' => fake()->paragraph(),
             'status' => 'published',

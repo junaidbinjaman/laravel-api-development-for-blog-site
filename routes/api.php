@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PostController;
+use App\Models\Seo;
 
 Route::post('/registerUser', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -15,6 +16,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::apiResource('/category', CategoryController::class);
     Route::apiResource('/post', PostController::class);
+    Route::apiResource('/seo', Seo::class);
 });
 
 Route::get('/categories', [CategoryController::class, 'index']);
