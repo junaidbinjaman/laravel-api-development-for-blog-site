@@ -7,9 +7,11 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\UserRegistrationRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use function Pest\Laravel\json;
 
 class AuthController extends Controller
 {
@@ -62,6 +64,20 @@ class AuthController extends Controller
             'data' => $user,
             'login_token' => $loginToken,
             'token_type' => 'Bearer'
+        ], 200);
+    }
+
+    public function logout(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user && $user->currentAccessToken()) {
+            $user->currentAccessToken()->delete();
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'The user has been logged out successfully'
         ], 200);
     }
 }
