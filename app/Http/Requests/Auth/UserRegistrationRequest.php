@@ -26,7 +26,8 @@ class UserRegistrationRequest extends FormRequest
             'email' => 'required|email|unique:users,email',
             'password' => 'required|confirmed|min:8',
             'profile_picture' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
-            'phone_number' => 'nullable|regex:/^[\d\s\+\-]{7,15}$/'
+            'phone_number' => 'nullable|regex:/^[\d\s\+\-]{7,15}$/',
+            'role' => 'nullable|in:admin,user,author'
         ];
     }
 

@@ -80,4 +80,33 @@ class AuthController extends Controller
             'message' => 'The user has been logged out successfully'
         ], 200);
     }
+
+    public function getUserData(Request $request, int $id)
+    {
+        $authenticated_user = Auth::user();
+
+        if ($authenticated_user->id !== $id && $request->user()->role !== 'admin') {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'You are not authorized to do this action',
+                'data' => []
+            ], 403);
+        }
+
+        $user = User::query()->find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'No user found matching your provided user id',
+                'data' => []
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User data retrieved successfully',
+            'data' => $user
+        ], 200);
+    }
 }
