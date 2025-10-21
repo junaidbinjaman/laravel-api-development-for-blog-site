@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -22,13 +22,18 @@ class UserRegistrationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => 'nullable|min:2|regex:/^[\w\s\-]+$/',
-            'last_name' => 'nullable|min:2|regex:/^[\w\s\-]+$/',
-            'username' => 'required|unique:users,username',
+            'name' => 'required|unique:users,name|regex:/^[A-Za-z\d\-]+$/',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|confirmed|min:8',
-            'profile_picture' => 'nullable',
+            'profile_picture' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:2048',
             'phone_number' => 'nullable|regex:/^[\d\s\+\-]{7,15}$/'
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.regex' => 'Regex for the name field failed.'
         ];
     }
 }
