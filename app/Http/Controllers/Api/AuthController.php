@@ -4,14 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\UpdateUserdataRequest;
 use App\Http\Requests\Auth\UserRegistrationRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
-use function Pest\Laravel\json;
 
 class AuthController extends Controller
 {
@@ -107,6 +106,38 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'User data retrieved successfully',
             'data' => $user
+        ], 200);
+    }
+
+    function updateUserData(UpdateUserdataRequest $request, $id): JsonResponse
+    {
+        $user = User::query()->find($id);
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Invalid user id. The user is not found'
+            ], 404);
+        }
+
+        $user->fill($request->only(['email', 'phone_number']));
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        if ($request->hasFile('profile_picture')) {
+            $fileName = 'profile_' . now()->timestamp . '.' . $request->file('profile_picture')->getClientOriginalExtension();
+            $path = $request->file('profile_picture')->storeAs('profile', $fileName, 'public');
+            $user->profile_picture = $path;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'The user data has been updated successfully',
+            'data' => $request->only(['email'])
         ], 200);
     }
 }

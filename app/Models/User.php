@@ -9,10 +9,12 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
+ * @property integer $id
  * @property string $email
- * @property integer phone_number
- * @property string profile_picture
+ * @property integer $phone_number
+ * @property string $profile_picture
  * @property "admin" | "author" | "user" $role
+ * @property string $password
  */
 class User extends Authenticatable
 {
