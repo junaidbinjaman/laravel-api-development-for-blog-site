@@ -16,7 +16,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::apiResource('/category', CategoryController::class);
     Route::apiResource('/post', PostController::class);
-    Route::apiResource('/seo', Seo::class);
 });
 
 Route::get('/categories', [CategoryController::class, 'index']);

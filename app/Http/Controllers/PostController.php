@@ -40,7 +40,12 @@ class PostController extends Controller
         $data['author_id'] = auth()->id();
         $data['status'] = auth()->user()->role === 'admin' ? 'published' : 'draft';
 
-        $post = Post::create($data);
+        $post = Post::query()->create($data);
+        $seoData = $request->only(['meta_title', 'meta_description']);
+
+        if(!empty(array_filter($seoData))) {
+            $post->seo()->create($seoData);
+        }
 
         return response()->json([
             'status' => 'success',

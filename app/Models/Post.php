@@ -35,4 +35,9 @@ class Post extends Model
     {
         return $this->belongsTo(User::class, 'author_id');
     }
+
+    public function seo(): HasOne
+    {
+        return $this->hasOne(Seo::class, 'post_id');
+    }
 }
