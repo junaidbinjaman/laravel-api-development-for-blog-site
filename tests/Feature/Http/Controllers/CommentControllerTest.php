@@ -13,8 +13,8 @@ beforeEach(function () {
 
 // Create -- Happy Path
 test('logged-in author can post a comment successfully', function () {
-    $user = User::query()->create(['role' => 'author']);
-    $blog = Post::query()->create();
+    $user = User::factory()->create(['role' => 'author', 'name' => 'junaid']);
+    $blog = Post::factory()->create();
 
     Sanctum::actingAs($user);
 
@@ -31,8 +31,8 @@ test('logged-in author can post a comment successfully', function () {
 });
 
 test('logged-in user can post a comment', function () {
-    $user = User::query()->create(['role' => 'user']);
-    $blog = Post::query()->create();
+    $user = User::factory()->create(['role' => 'user']);
+    $blog = Post::factory()->create();
 
     Sanctum::actingAs($user);
 
@@ -50,13 +50,11 @@ test('logged-in user can post a comment', function () {
 
 // Create -- Unhappy path
 test('non logged-in user fails to post a comment', function () {
-    $blog = Post::query()->create();
+    $blog = Post::factory()->create();
 
     $response = $this->postJson($this->endpoint, [
-        'name' => auth()->user()->name,
         'description' => 'The testing description goes in here',
         'post_id' => $blog->id,
-        'author_id' => auth()->user()->id,
         'status' => 'pending',
     ]);
 
@@ -65,8 +63,8 @@ test('non logged-in user fails to post a comment', function () {
 });
 
 test('fails to post invalid comment data', function () {
-    $user = User::query()->create(['role' => 'user']);
-    $blog = Post::query()->create();
+    $user = User::factory()->create(['role' => 'user']);
+    $blog = Post::factory()->create();
 
     Sanctum::actingAs($user);
 
@@ -83,8 +81,8 @@ test('fails to post invalid comment data', function () {
 });
 
 test('fails to post with invalid post id', function () {
-    $user = User::query()->create(['role' => 'user']);
-    $blog = Post::query()->create();
+    $user = User::factory()->create(['role' => 'user']);
+    $blog = Post::factory()->create();
 
     Sanctum::actingAs($user);
 
@@ -96,50 +94,45 @@ test('fails to post with invalid post id', function () {
         'status' => 'pending',
     ]);
 
-    $response->assertStatus(201);
-    $this->assertDatabaseCount('comments', 1);
+    $response->assertStatus(422);
+    $this->assertDatabaseCount('comments', 0);
 });
 
 // Read All -- Happy Path
 test('admin can retrieve all comments', function () {
-    $admin = User::query()->create(['role' => 'admin']);
+    $admin = User::factory()->create(['role' => 'admin']);
     Comment::factory()->count(10)->create();
 
     Sanctum::actingAs($admin);
-    $response = $this->getJson('/api/comments');
+    $response = $this->getJson('/api/comment');
 
     $response->assertStatus(200);
     $response->assertJsonCount(10, 'data');
 });
 
-test('author can retrieve all comments posted on his own posts', function () {
-    $author = User::factory()->create(['role' => 'author']);
-    $post = Post::factory()->for($author, 'author')->create();
-    $post2 = Post::factory()->create();
-    Comment::factory()->count(3)->for($post)->create();
-    Comment::factory()->count(3)->for($post2)->create();
-
-    Sanctum::actingAs($author);
-
-    $response = $this->getJson("/api/comments");
-
-    $response->assertStatus(200);
-    $response->assertJsonCount(3, 'data');
-});
-
-
-test('user can retrieve all comments posted by him', function () {
+test('author/user can retrieve all approved comments', function () {
     $user = User::factory()->create(['role' => 'user']);
-    Comment::factory()->count(5)->for($user, 'user')->create();
-    // plus some other users' comments
-    Comment::factory()->count(3)->create();
+
+    $posts = Post::factory()->count(2)->for($user, 'author')->create();
+
+    Comment::factory()->count(2)->for($posts[0])->create(['status' => 'approved']);
+    Comment::factory()->count(1)->for($posts[0])->create(['status' => 'draft']);
+    Comment::factory()->count(3)->for($posts[1])->create(['status' => 'approved']);
+    Comment::factory()->count(2)->for($posts[1])->create(['status' => 'archived']);
 
     Sanctum::actingAs($user);
 
-    $response = $this->getJson('/api/comments');
+    $response = $this->getJson('/api/comment');
 
     $response->assertStatus(200);
-    $response->assertJsonCount(5, 'data');
+
+    // Ensure only approved comments are returned
+    $responseData = $response->json('data');
+    foreach ($responseData as $comment) {
+        expect($comment['status'])->toBe('approved');
+    }
+
+    $this->assertCount(5, $responseData); // 2 + 3 approved comments
 });
 
 

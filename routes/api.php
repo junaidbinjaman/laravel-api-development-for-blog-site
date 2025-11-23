@@ -4,7 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PostController;
-use App\Models\Seo;
+use App\Http\Controllers\CommentController;
 
 Route::post('/registerUser', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -16,6 +16,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::apiResource('/category', CategoryController::class);
     Route::apiResource('/post', PostController::class);
+    Route::apiResource('/comment', CommentController::class);
 });
 
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -23,3 +24,4 @@ Route::get('/category/{category}', [CategoryController::class, 'show']);
 
 Route::get('/post', [PostController::class, 'index']);
 Route::get('/posts/{slug}', [PostController::class, 'show']);
+Route::get('/comment', [CommentController::class, 'index']);

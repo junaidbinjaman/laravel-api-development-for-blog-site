@@ -26,7 +26,7 @@ class PostFactory extends Factory
             'author_id' => null,
             'category_id' => null,
             'content' => fake()->paragraphs(rand(3, 7), true),
-            'excerpt' => fake()->paragraph(),
+            'excerpt' => fake()->text(200),
             'status' => 'published',
         ];
     }
