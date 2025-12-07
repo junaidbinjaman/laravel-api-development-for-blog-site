@@ -6,6 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int id
+ * @property string name
+ * @property string description
+ * @property string post_id
+ * @property int author_id
+ * @property string status
+ */
 class Comment extends Model
 {
     /** @use HasFactory<\Database\Factories\CommentFactory> */

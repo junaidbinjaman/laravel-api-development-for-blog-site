@@ -43,7 +43,7 @@ class PostController extends Controller
         $post = Post::query()->create($data);
         $seoData = $request->only(['meta_title', 'meta_description']);
 
-        if(!empty(array_filter($seoData))) {
+        if (!empty(array_filter($seoData))) {
             $post->seo()->create($seoData);
         }
 
@@ -60,7 +60,10 @@ class PostController extends Controller
     public function show($slug)
     {
         //
-        $post = Post::query()->where('slug', '=', $slug)->firstOrFail();
+        $post = Post::query()->
+        where('slug', '=', $slug)
+            ->with('comments')
+            ->firstOrFail();
 
         return response()->json([
             'status' => 'success',

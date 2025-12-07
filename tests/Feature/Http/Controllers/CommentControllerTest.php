@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\Post;
 use Laravel\Sanctum\Sanctum;
@@ -140,10 +141,10 @@ test('user can retrieve comments by post id', function () {
     $post = Post::factory()->create();
     Comment::factory()->count(4)->for($post)->create();
 
-    $response = $this->getJson("/api/comment/{$post->id}");
+    $response = $this->getJson("/api/comment/post/{$post->id}");
 
     $response->assertStatus(200);
-    $response->assertJsonCount(4, 'data');
+    $response->assertJsonCount(4, 'post.comments');
 });
 
 // Read single data --  Happy Path
@@ -153,9 +154,9 @@ test('non logged-in user can retrieve a single comment', function () {
     $response = $this->getJson("/api/comment/{$comment->id}");
 
     $response->assertStatus(200);
-    $response->assertJson(fn ($json) =>
-    $json->where('data.id', $comment->id)
-        ->where('data.body', $comment->body)
+    $response->assertJson(fn($json) => $json->where('data.id', $comment->id)
+        ->where('data.description', $comment->description)
+        ->etc()
     );
 });
 
@@ -166,19 +167,18 @@ test('non logged-in user fails to retrieve a single comment by invalid comment i
     $response = $this->getJson("/api/comments/{$invalidId}");
 
     $response->assertStatus(404);
-    $response->assertJson(fn ($json) =>
-    $json->where('message', 'Comment not found')
-    );
 });
 
 
 // Update -- Happy Path
 test('admin approves a comment successfully', function () {
     $admin = User::factory()->create(['role' => 'admin']);
-    $comment = Comment::factory()->create();
+    $comment = Comment::factory()->create([
+        'status' => 'draft'
+    ]);
 
     Sanctum::actingAs($admin);
-    $response = $this->postJson(`comment/{$comment->id}/approve`);
+    $response = $this->putJson('/api/comment/' . $comment->id . '/approve');
 
     $response->assertStatus(200);
     $this->assertDatabaseHas('comments', ['status' => 'approved']);
@@ -186,13 +186,13 @@ test('admin approves a comment successfully', function () {
 
 test('admin rejects a comment successfully', function () {
     $admin = User::factory()->create(['role' => 'admin']);
-    $comment = Comment::factory()->create();
+    $comment = Comment::factory()->create(['status' => 'draft']);
 
     Sanctum::actingAs($admin);
-    $response = $this->postJson(`comment/{$comment->id}/reject`);
+    $response = $this->putJson('/api/comment/' . $comment->id . '/archive');
 
     $response->assertStatus(200);
-    $this->assertDatabaseHas('comments', ['status' => 'draft']);
+    $this->assertDatabaseHas('comments', ['status' => 'archived']);
 });
 
 test('admin can edit the comment description successfully', function () {

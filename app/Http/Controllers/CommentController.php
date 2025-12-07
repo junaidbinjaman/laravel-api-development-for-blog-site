@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
 use App\Models\Comment;
+use App\Models\Post;
 
 class CommentController extends Controller
 {
@@ -58,7 +59,10 @@ class CommentController extends Controller
      */
     public function show(Comment $comment)
     {
-        //
+        return response()->json([
+            'status' => 'success',
+            'data' => $comment
+        ], 200);
     }
 
     /**
@@ -67,6 +71,11 @@ class CommentController extends Controller
     public function update(UpdateCommentRequest $request, Comment $comment)
     {
         //
+
+        return response()->json([
+            'status' => 'fail',
+            'message' => 'dsifgdsib'
+        ], 200);
     }
 
     /**
@@ -75,5 +84,85 @@ class CommentController extends Controller
     public function destroy(Comment $comment)
     {
         //
+    }
+
+    public function getCommentsByPostId(int $post_id)
+    {
+        $posts = Post::query()->with(['comments'])->findOrFail($post_id);
+
+        return response()->json([
+            'status' => 'success',
+            'post' => $posts
+        ], 200);
+    }
+
+    public function approveComment(int $commentId)
+    {
+        $comment = Comment::query()->find($commentId);
+
+        if (auth()->user()->role !== 'admin') {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Sorry!! You are not allowed to perform this action.'
+            ], 403);
+        }
+
+        if (!$comment) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'No comment found'
+            ], 404);
+        }
+
+        if ($comment->status === 'approved') {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'The comment is already approved'
+            ], 409);
+        }
+
+        $comment->status = 'approved';
+        $comment->save();
+
+        return response()->json([
+            'status' => 'success',
+            'comment' => $comment,
+            'message' => 'The comment is approved successfully'
+        ], 200);
+    }
+
+    public function rejectComment(int $commentId)
+    {
+        $comment = Comment::query()->find($commentId);
+
+        if (auth()->user()->role !== 'admin') {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Sorry!! You are not allowed to perform this action.'
+            ], 403);
+        }
+
+        if (!$comment) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'No comment found'
+            ], 404);
+        }
+
+        if ($comment->status === 'archived') {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'The comment is already rejected'
+            ], 409);
+        }
+
+        $comment->status = 'archived';
+        $comment->save();
+
+        return response()->json([
+            'status' => 'success',
+            'comment' => $comment,
+            'message' => 'The comment is rejected successfully'
+        ], 200);
     }
 }

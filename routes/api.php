@@ -16,7 +16,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::apiResource('/category', CategoryController::class);
     Route::apiResource('/post', PostController::class);
-    Route::apiResource('/comment', CommentController::class);
+    Route::apiResource('/comment', CommentController::class)->only(['store', 'update', 'destroy']);
+    Route::put('/comment/{comment}/approve', [CommentController::class, 'approveComment']);
+    Route::put('/comment/{comment}/archive', [CommentController::class, 'rejectComment']);
 });
 
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -24,4 +26,5 @@ Route::get('/category/{category}', [CategoryController::class, 'show']);
 
 Route::get('/post', [PostController::class, 'index']);
 Route::get('/posts/{slug}', [PostController::class, 'show']);
-Route::get('/comment', [CommentController::class, 'index']);
+Route::apiResource('/comment', CommentController::class)->only(['index', 'show']);
+Route::get('/comment/post/{postId}', [CommentController::class, 'getCommentsByPostId']);
