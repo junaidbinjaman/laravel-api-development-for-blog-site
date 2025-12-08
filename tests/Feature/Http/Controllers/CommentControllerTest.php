@@ -200,7 +200,7 @@ test('admin can edit the comment description successfully', function () {
     $comment = Comment::factory()->create();
 
     Sanctum::actingAs($admin);
-    $response = $this->putJson(`comment/{$comment->id}`, [
+    $response = $this->putJson('/api/comment/' . $comment->id, [
         'description' => 'New description'
     ]);
 
@@ -213,7 +213,7 @@ test('user can edit his own comment description', function () {
     $comment = Comment::factory()->for($user, 'author')->create();
 
     Sanctum::actingAs($user);
-    $response = $this->putJson(`comment/{$comment->id}`, [
+    $response = $this->putJson('/api/comment/' . $comment->id, [
         'description' => 'New description'
     ]);
 
@@ -224,10 +224,11 @@ test('user can edit his own comment description', function () {
 // Update -- Unhappy Path
 test('author fails to edit a user comment description', function () {
     $author = User::factory()->create(['role' => 'author']);
-    $comment = Comment::factory()->create();
+    $user = User::factory()->create(['role' => 'user']);
+    $comment = Comment::factory()->create(['author_id' => $user->id]);
 
     Sanctum::actingAs($author);
-    $response = $this->putJson(`comment/{$comment->id}`, [
+    $response = $this->putJson('/api/comment/' . $comment->id, [
         'description' => 'New description'
     ]);
 
@@ -236,10 +237,11 @@ test('author fails to edit a user comment description', function () {
 
 test('a user fails to edit a different user comment description', function () {
     $user = User::factory()->create(['role' => 'user']);
-    $comment = Comment::factory()->create();
+    $user1 = User::factory()->create(['role' => 'user']);
+    $comment = Comment::factory()->create(['author_id' => $user1->id]);
 
     Sanctum::actingAs($user);
-    $response = $this->putJson(`comment/{$comment->id}`, [
+    $response = $this->putJson('/api/comment/' . $comment->id, [
         'description' => 'New description'
     ]);
 
@@ -249,7 +251,7 @@ test('a user fails to edit a different user comment description', function () {
 test('non logged-in user fails to edit a comment description', function () {
     $comment = Comment::factory()->create();
 
-    $response = $this->putJson(`comment/{$comment->id}`, [
+    $response = $this->putJson('/api/comment/' . $comment->id, [
         'description' => 'New description'
     ]);
 
@@ -261,7 +263,7 @@ test('an admin fails to edit an invalid comment description', function () {
     $comment = Comment::factory()->create();
 
     Sanctum::actingAs($admin);
-    $response = $this->putJson(`comment/{$comment->id}`, [
+    $response = $this->putJson('/api/comment/' . $comment->id, [
         'description' => ''
     ]);
 
@@ -274,7 +276,7 @@ test('admin can delete a comment successfully', function () {
     $comment = Comment::factory()->create();
 
     Sanctum::actingAs($admin);
-    $response = $this->deleteJson(`comment/{$comment->id}`);
+    $response = $this->deleteJson('/api/comment/' . $comment->id);
 
     $response->assertStatus(200);
     $this->assertDatabaseCount('comments', 0);
@@ -285,7 +287,7 @@ test('user can delete his won comment successfully', function () {
     $comment = Comment::factory()->for($user, 'author')->create();
 
     Sanctum::actingAs($user);
-    $response = $this->deleteJson(`/api/comment/{$comment->id}`);
+    $response = $this->deleteJson('/api/comment/' . $comment->id);
 
     $response->assertStatus(200);
     $this->assertDatabaseCount('comments', 0);
@@ -294,21 +296,25 @@ test('user can delete his won comment successfully', function () {
 // Delete -- Unhappy Path
 test('user fails to delete a different user\'s comment', function () {
     $user = User::factory()->create(['role' => 'user']);
-    $comment = Comment::factory()->create();
+    $otherUser = User::factory()->create(['role' => 'user']);
+    $comment = Comment::factory()->create(['author_id' => $otherUser]);
 
     Sanctum::actingAs($user);
-    $response = $this->deleteJson(`/api/comment/{$comment->id}`);
+    $response = $this->deleteJson('/api/comment/' . $comment->id);
 
     $response->assertStatus(403);
     $this->assertDatabaseCount('comments', 1);
 });
 
 test('author fails to delete a comment', function () {
-    $author = User::factory()->create(['role' => 'author']);
-    $comment = Comment::factory()->create();
+    $postAuthor = User::factory()->create(['role' => 'author']);
+    $commenter = User::factory()->create(['role' => 'user']);
 
-    Sanctum::actingAs($author);
-    $response = $this->deleteJson(`/api/comment/{$comment->id}`);
+    $comment = Comment::factory()->create(['author_id' => $commenter->id]);
+
+
+    Sanctum::actingAs($postAuthor);
+    $response = $this->deleteJson('/api/comment/' . $comment->id);
 
     $response->assertStatus(403);
     $this->assertDatabaseCount('comments', 1);
@@ -316,10 +322,10 @@ test('author fails to delete a comment', function () {
 
 test('admin fails to delete an invalid author', function () {
     $admin = User::factory()->create(['role' => 'admin']);
-    $comment = Comment::factory()->create();
+    Comment::factory()->create();
 
     Sanctum::actingAs($admin);
-    $response = $this->deleteJson(`comment/999`);
+    $response = $this->deleteJson('api/comment/999');
 
     $response->assertStatus(404);
     $this->assertDatabaseCount('comments', 1);

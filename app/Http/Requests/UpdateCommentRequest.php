@@ -11,7 +11,10 @@ class UpdateCommentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $user = auth()->user();
+        $comment = $this->route('comment');
+
+        return $user->role === 'admin' || $user->id === $comment->author_id;
     }
 
     /**
@@ -22,7 +25,8 @@ class UpdateCommentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'sometimes|min:3|max:30|string',
+            'description' => 'sometimes|min:3|max:255|string'
         ];
     }
 }

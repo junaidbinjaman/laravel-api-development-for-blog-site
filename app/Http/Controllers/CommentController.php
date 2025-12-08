@@ -70,11 +70,13 @@ class CommentController extends Controller
      */
     public function update(UpdateCommentRequest $request, Comment $comment)
     {
-        //
+        $request->validated();
+        $comment->fill($request->only('name', 'description'));
+        $comment->save();
 
         return response()->json([
-            'status' => 'fail',
-            'message' => 'dsifgdsib'
+            'status' => 'success',
+            'message' => 'The comment is updated successfully'
         ], 200);
     }
 
@@ -83,7 +85,21 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment)
     {
-        //
+        $user = auth()->user();
+
+        if ($user->role !== 'admin' && $user->id !== $comment->author_id) {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'You are not allowed to perform this action'
+            ], 403);
+        }
+
+        $comment->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'The comment is deleted success.'
+        ], 200);
     }
 
     public function getCommentsByPostId(int $post_id)
